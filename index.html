@@ -1,63 +1,309 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <title>엑셀 병합/병합 해제 변환기</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script defer src="convert.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: #f4f4f4;
-      padding: 40px 0;
-    }
-    .section {
-      background: white;
-      padding: 30px;
-      margin-bottom: 30px;
-      width: 450px;
-      border-radius: 12px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    .upload-box {
-      border: 2px dashed #999;
-      padding: 25px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: .2s;
-      margin-top: 10px;
-    }
-    .upload-box:hover {
-      border-color: #333;
-    }
-    input[type="file"] {
-      display: none;
-    }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>지니툴</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script defer src="convert.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #eef2ff, #f8fafc);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 60px 20px;
+        min-height: 100vh;
+      }
 
-<div class="section">
-  <h2>1) 병합 해제 → 자동 확장 (Unmerge)</h2>
-  <p>병합된 셀을 모두 풀고, 값 복사 후 반환하는 기능</p>
-  <div class="upload-box" onclick="document.getElementById('fileUnmerge').click()">
-    🔼 파일 업로드 (Unmerge)
-  </div>
-  <input type="file" id="fileUnmerge" accept=".xlsx,.xls" />
-</div>
+      .layout {
+        display: flex;
+        width: 100%;
+        max-width: 1200px;
+        gap: 40px;
+      }
 
-<div class="section">
-  <h2>2) 다시 병합하기 (Re-Merge)</h2>
-  <p>연속된 셀 값이 동일하면 자동으로 병합해주는 기능</p>
-  <div class="upload-box" onclick="document.getElementById('fileMerge').click()">
-    🔼 파일 업로드 (Merge)
-  </div>
-  <input type="file" id="fileMerge" accept=".xlsx,.xls" />
-</div>
+      .sidebar {
+        width: 220px;
+        background: #ffffffcc;
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        height: fit-content;
+      }
 
-</body>
+      .logo {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #6366f1, #3b82f6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .sidebar ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .sidebar li {
+        padding: 12px;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        color: #475569;
+        font-size: 15px;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+      }
+
+      .sidebar li i {
+        margin-right: 8px;
+        font-size: 16px;
+      }
+
+      .sidebar li.active,
+      .sidebar li:hover {
+        background: #eef2ff;
+        color: #4338ca;
+      }
+
+      .badge {
+        background: #e2e8f0;
+        padding: 3px 8px;
+        font-size: 11px;
+        border-radius: 8px;
+        color: #64748b;
+        margin-left: auto;
+      }
+
+      .container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 60px;
+      }
+
+      .card {
+        background: white;
+        padding: 32px;
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+        transition: 0.25s ease;
+        border: 1px solid #e5e7eb;
+      }
+
+      .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+      }
+
+      h2 {
+        margin: 0 0 10px;
+        font-weight: 600;
+        color: #1e293b;
+      }
+
+      p {
+        margin: 0 0 20px;
+        color: #475569;
+        font-size: 14px;
+      }
+
+      .upload-area {
+        border: 2px dashed #94a3b8;
+        padding: 40px 20px;
+        border-radius: 14px;
+        text-align: center;
+        position: relative;
+        margin-top: 20px;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .upload-area p {
+        margin: 0 0 16px;
+        color: #64748b;
+        font-size: 14px;
+      }
+
+      .upload-area input[type="file"] {
+        display: none;
+      }
+
+      .upload-btn {
+        border-radius: 12px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #6366f1, #3b82f6);
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+      }
+
+      .upload-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, #4f46e5, #2563eb);
+      }
+
+      .page-section {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h1 class="logo">ZiniTool</h1>
+        <nav>
+          <ul>
+            <li class="active" onclick="showPage('excel')">
+              <i class="fa-solid fa-file-excel" style="color: #16a34a"></i>
+              엑셀 tool
+            </li>
+            <li onclick="showPage('ppt')">
+              <i class="fa-solid fa-file-powerpoint" style="color: #d94600"></i>
+              파워포인트 tool
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <div class="container">
+        <!-- Excel Section -->
+        <!-- Excel Section -->
+        <section id="page-excel" class="page-section" style="display: block">
+          <div class="card">
+            <h2>1) 병합 해제 → 자동 확장 (Unmerge)</h2>
+            <p>
+              1.병합된 셀을 모두 풀고, 내용을 각 셀에 자동 복제하여 엑셀을 정렬
+              가능한 형태로 변환합니다.
+            </p>
+            <p>2.파일 업로드 후 변경된 파일이 자동으로 다운로드 됩니다.</p>
+            <div class="upload-area" id="unmerge-drop-area">
+              <p>여기에 파일을 드래그 또는 클릭하여 업로드</p>
+              <input type="file" id="fileUnmerge" accept=".xlsx,.xls" />
+              <button
+                class="upload-btn"
+                onclick="document.getElementById('fileUnmerge').click()"
+              >
+                🔽 파일 업로드
+              </button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 40px">
+            <h2>2) 다시 병합하기 (Re-Merge)</h2>
+            <p>
+              1.연속된 셀 값이 동일한 경우 자동으로 병합하여 가독성을 높인 엑셀
+              형태로 복원합니다.
+            </p>
+            <p>2.파일 업로드 후 변경된 파일이 자동으로 다운로드 됩니다.</p>
+
+            <!-- 칼럼명 입력 박스 -->
+            <input
+              type="text"
+              id="mergeColumnName1"
+              placeholder="병합할 컬럼명 입력 (예: 회사명)"
+              style="
+                width: 37%;
+                padding: 10px;
+                margin-bottom: 12px;
+                border-radius: 8px;
+                border: 1px solid #cbd5e1;
+                display: block;
+              "
+            />
+            <input
+              type="text"
+              id="mergeColumnName2"
+              placeholder="..."
+              style="
+                width: 37%;
+                padding: 10px;
+                margin-bottom: 12px;
+                border-radius: 8px;
+                border: 1px solid #cbd5e1;
+                display: block;
+              "
+            />
+            <input
+              type="text"
+              id="mergeColumnName3"
+              placeholder="..."
+              style="
+                width: 37%;
+                padding: 10px;
+                margin-bottom: 12px;
+                border-radius: 8px;
+                border: 1px solid #cbd5e1;
+                display: block;
+              "
+            />
+
+            <div class="upload-area" id="merge-drop-area">
+              <p>여기에 파일을 드래그 또는 클릭하여 업로드</p>
+              <input type="file" id="fileMerge" accept=".xlsx,.xls" />
+              <button
+                class="upload-btn"
+                onclick="document.getElementById('fileMerge').click()"
+              >
+                🔽 파일 업로드
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- PowerPoint Section -->
+        <section id="page-ppt" class="page-section">
+          <div class="card">
+            <h2>파워포인트 자동 템플릿 생성</h2>
+            <p>
+              슬라이드 자동 생성, 이미지 배치, 표 자동 스타일링 등의 기능이
+              제공될 예정입니다.
+            </p>
+            <div class="upload-btn" disabled>🚧 개발 중입니다...</div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      function showPage(id) {
+        document
+          .querySelectorAll(".page-section")
+          .forEach((sec) => (sec.style.display = "none"));
+        document.getElementById("page-" + id).style.display = "block";
+
+        document
+          .querySelectorAll(".sidebar li")
+          .forEach((li) => li.classList.remove("active"));
+        event.target.classList.add("active");
+      }
+    </script>
+  </body>
 </html>
